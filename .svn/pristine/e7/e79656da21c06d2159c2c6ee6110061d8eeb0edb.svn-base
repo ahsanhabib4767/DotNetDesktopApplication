@@ -1,0 +1,110 @@
+﻿using FBApiApplication.CS;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace FBApiApplication
+{
+    public partial class ParameterSetup : Form
+    {
+        SqlCommand cmd;
+        Service objSendData;
+        public ParameterSetup()
+        {
+            InitializeComponent();
+            Parameter_Reload();
+        }
+        //Parameter bindings
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string[] messages = new string[3];
+            string CBSYN = System.Configuration.ConfigurationSettings.AppSettings["OwnCBS"];
+            if (CBSYN == "Y")
+            {
+                objSendData = new Service();
+                if (rdYes.Checked == true)
+                {
+                    messages=objSendData.Save_Parameter(Int32.Parse(txtSendAft.Text), Int32.Parse(txtReloadAft.Text), txtApiUrl.Text, txtApiUser.Text, txtautoyn.Text,rdYes.Text);
+                    if (messages[1] == "OK")
+                    {
+                        Settings.WebApiUrl = txtApiUrl.Text.ToString();
+                        Settings.Apiusername = txtApiUser.Text.ToString();
+                        Settings.Apiuserpass = txtApiUser.Text.ToString();
+                        MessageBox.Show(messages[0].ToString());
+                        this.Refresh();
+                        Refresh();
+                        this.Hide();
+                    }
+                }
+                else if((rdNo.Checked == true))
+                {
+                    messages=objSendData.Save_Parameter(Int32.Parse(txtSendAft.Text), Int32.Parse(txtReloadAft.Text), txtApiUrl.Text, txtApiUser.Text, txtautoyn.Text, rdNo.Text);
+                    if (messages[1] == "OK")
+                    {
+                        Settings.WebApiUrl = txtApiUrl.Text.ToString();
+                        Settings.Apiusername = txtApiUser.Text.ToString();
+                        Settings.Apiuserpass = txtApiUser.Text.ToString();
+                        MessageBox.Show(messages[0].ToString());
+                        this.Refresh();
+                        Refresh();
+                        this.Hide();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Please Select Auto Y/N");
+                }
+                
+                //Save_Parameter();
+            }
+            
+
+        }
+
+        
+        void Parameter_Reload()
+        {
+            try
+            {
+                var pdata = new ApiParameter();
+                Service objService = new Service();
+                pdata=objService.Get_Parameter_Data();
+                if(pdata != null && pdata.SendAft.Length>0)
+                {
+                    txtSendAft.Text = pdata.SendAft.ToString();
+                    txtReloadAft.Text = pdata.ReloadAft.ToString();
+                    txtApiUrl.Text = pdata.ApiUrl.ToString();
+                    txtApiUser.Text = pdata.ApiUser.ToString();
+                    txtApiUser.Text = pdata.ApiPass.ToString();
+                    txtautoyn.Text = pdata.autoYN.ToString();
+                    Settings.WebApiUrl = pdata.ApiUrl.ToString();
+                    Settings.Apiusername= pdata.ApiUser.ToString();
+                    Settings.Apiuserpass = pdata.ApiPass.ToString();
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+        
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            var obj = new ApiService();
+            obj.Show();
+            this.Hide();
+        }
+    }
+}

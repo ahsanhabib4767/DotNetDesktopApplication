@@ -1,0 +1,154 @@
+﻿namespace FBApiApplication
+{
+    partial class ApiService
+    {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.components = new System.ComponentModel.Container();
+            this.btnStart = new System.Windows.Forms.Button();
+            this.btnStop = new System.Windows.Forms.Button();
+            this.btnParameter = new System.Windows.Forms.Button();
+            this.btnondemand = new System.Windows.Forms.Button();
+            this.btnClose = new System.Windows.Forms.Button();
+            this.message_label = new System.Windows.Forms.Label();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.txttimervalue = new System.Windows.Forms.TextBox();
+            this.SuspendLayout();
+            // 
+            // btnStart
+            // 
+            this.btnStart.BackColor = System.Drawing.Color.Transparent;
+            this.btnStart.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.btnStart.Location = new System.Drawing.Point(824, 12);
+            this.btnStart.Name = "btnStart";
+            this.btnStart.Size = new System.Drawing.Size(177, 60);
+            this.btnStart.TabIndex = 0;
+            this.btnStart.Text = "Service Start";
+            this.btnStart.UseVisualStyleBackColor = false;
+            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
+            // 
+            // btnStop
+            // 
+            this.btnStop.Location = new System.Drawing.Point(824, 78);
+            this.btnStop.Name = "btnStop";
+            this.btnStop.Size = new System.Drawing.Size(177, 60);
+            this.btnStop.TabIndex = 1;
+            this.btnStop.Text = "Service Stop";
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
+            // 
+            // btnParameter
+            // 
+            this.btnParameter.Location = new System.Drawing.Point(824, 150);
+            this.btnParameter.Name = "btnParameter";
+            this.btnParameter.Size = new System.Drawing.Size(177, 60);
+            this.btnParameter.TabIndex = 2;
+            this.btnParameter.Text = "Parameter";
+            this.btnParameter.UseVisualStyleBackColor = true;
+            this.btnParameter.Click += new System.EventHandler(this.btnParameter_Click);
+            // 
+            // btnondemand
+            // 
+            this.btnondemand.Location = new System.Drawing.Point(824, 225);
+            this.btnondemand.Name = "btnondemand";
+            this.btnondemand.Size = new System.Drawing.Size(177, 60);
+            this.btnondemand.TabIndex = 3;
+            this.btnondemand.Text = "Send Data";
+            this.btnondemand.UseVisualStyleBackColor = true;
+            this.btnondemand.Click += new System.EventHandler(this.btnondemand_Click);
+            // 
+            // btnClose
+            // 
+            this.btnClose.Location = new System.Drawing.Point(824, 305);
+            this.btnClose.Name = "btnClose";
+            this.btnClose.Size = new System.Drawing.Size(177, 60);
+            this.btnClose.TabIndex = 4;
+            this.btnClose.Text = "Exit";
+            this.btnClose.UseVisualStyleBackColor = true;
+            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
+            // 
+            // message_label
+            // 
+            this.message_label.AutoSize = true;
+            this.message_label.Font = new System.Drawing.Font("Verdana", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.message_label.ForeColor = System.Drawing.Color.Red;
+            this.message_label.Location = new System.Drawing.Point(14, 12);
+            this.message_label.Name = "message_label";
+            this.message_label.Size = new System.Drawing.Size(344, 38);
+            this.message_label.TabIndex = 5;
+            this.message_label.Text = "Service is stopped";
+            // 
+            // timer1
+            // 
+            this.timer1.Interval = 1000;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // txttimervalue
+            // 
+            this.txttimervalue.Location = new System.Drawing.Point(21, 55);
+            this.txttimervalue.Name = "txttimervalue";
+            this.txttimervalue.ReadOnly = true;
+            this.txttimervalue.Size = new System.Drawing.Size(100, 20);
+            this.txttimervalue.TabIndex = 0;
+            // 
+            // ApiService
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackgroundImage = global::FBApiApplication.Properties.Resources.bg1;
+            this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.ClientSize = new System.Drawing.Size(1012, 724);
+            this.ControlBox = false;
+            this.Controls.Add(this.txttimervalue);
+            this.Controls.Add(this.message_label);
+            this.Controls.Add(this.btnClose);
+            this.Controls.Add(this.btnondemand);
+            this.Controls.Add(this.btnParameter);
+            this.Controls.Add(this.btnStop);
+            this.Controls.Add(this.btnStart);
+            this.Name = "ApiService";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "Flora Bank Service";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.Load += new System.EventHandler(this.ApiService_Load);
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Button btnStart;
+        private System.Windows.Forms.Button btnStop;
+        private System.Windows.Forms.Button btnParameter;
+        private System.Windows.Forms.Button btnondemand;
+        private System.Windows.Forms.Button btnClose;
+        private System.Windows.Forms.Label message_label;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.TextBox txttimervalue;
+    }
+}

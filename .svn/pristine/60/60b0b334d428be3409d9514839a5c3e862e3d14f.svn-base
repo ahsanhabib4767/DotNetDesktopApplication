@@ -1,0 +1,500 @@
+﻿using Newtonsoft.Json;
+using RestSharp;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Data.SqlClient;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace FBApiApplication.CS
+{
+    public class Service : IDisposable
+    {
+        DBHelper DB;
+        readonly DBHelper _dbContext = new DBHelper();
+        ApiEntity obj = new ApiEntity();
+        public HttpClient _client;
+        public HttpResponseMessage _response;
+        public int result;
+        public string pass;
+        public Service()
+        {
+            _client = new HttpClient();
+
+        }
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+        }
+
+        public string SendData()
+        {
+            DB = new DBHelper();
+            string msg = "";
+            DateTime dt = Convert.ToDateTime(Settings.ServerDate);
+            DbCommand command = DB.ExecuteStoredProcesure("sp_req_msg");
+            try
+            {
+                command.Connection.Open();
+                command.Parameters.Add(DB.CreateParameter("P1", ""));
+                command.Parameters.Add(DB.CreateParameter("P2", dt.ToString("dd-MMM-yyyy")));
+
+                int result = command.ExecuteNonQuery();
+                if (result > 0)
+                {
+                    msg = command.Parameters[""].Value.ToString();
+                }
+            }
+            catch
+            {
+                msg = "";
+            }
+            finally
+            {
+                command.Connection.Close();
+                command.Connection.Dispose();
+                command.Dispose();
+                DB.Dispose();
+            }
+
+            return msg;
+        }
+
+        public string[] Save_Parameter(int sendtime, int endtime, string url, string user, string pass, string yn)
+        {
+            DB = new DBHelper();
+            string msg = "";
+            //DateTime dt = Convert.ToDateTime(Settings.ServerDate);
+            DbCommand cmd = DB.LiveExecuteStoredProcesure("wsp_parameter_api");
+            string[] messages = new string[3];
+            try
+            {
+                cmd.Connection.Open();
+                cmd.Parameters.Add(DB.CreateParameter("VSendAft", sendtime));
+                cmd.Parameters.Add(DB.CreateParameter("VReloadAft", endtime));
+                cmd.Parameters.Add(DB.CreateParameter("VApiUrl", url));
+                cmd.Parameters.Add(DB.CreateParameter("VApiUser", user));
+                cmd.Parameters.Add(DB.CreateParameter("VApiPass", pass));
+                cmd.Parameters.Add(DB.CreateParameter("Vautoyn", yn));
+                cmd.Parameters.Add(_dbContext.CreateParameterOut("VMSG", DbType.String, 200));
+                cmd.Parameters.Add(_dbContext.CreateParameterOut("Vmsg_code", DbType.String, 5));
+                int result = cmd.ExecuteNonQuery();
+                if (result > 0)
+                {
+                    messages[0] = cmd.Parameters["VMSG"].Value.ToString();
+                    messages[1] = cmd.Parameters["Vmsg_code"].Value.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                cmd.Connection.Close();
+                cmd.Connection.Dispose();
+                cmd.Dispose();
+                DB.Dispose();
+            }
+
+            return messages;
+
+
+        }
+        //api_ahsan
+
+        //public async Task<dynamic> ApiCalling(string uri, ApiEntity data)
+        //{
+        //    try
+        //    {
+        //        //var tokenRspns =await GetApiToken();
+        //        //var token = JsonConvert.DeserializeObject<dynamic>(tokenRspns);
+        //        var url = Get_Parameter_Data();
+        //        var jsonString = JsonConvert.SerializeObject(data);
+        //        var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
+        //        //writelog(jsonString);
+        //        //var responseMessage = await _client.PostAsync(Constants.WebApiUrl + uri, content);
+        //        var responseMessage = await _client.PostAsync(url.ApiUrl,content);
+        //        if (responseMessage.IsSuccessStatusCode)
+        //        {
+        //            var respnsData = JsonConvert.DeserializeObject(responseMessage.Content.ReadAsStringAsync().Result);
+
+        //            ResponseData dt = JsonConvert.DeserializeObject<ResponseData>(respnsData.ToString());
+        //            if (dt.Status == "Success")
+        //            {
+        //                UpdateTrace(dt.Bank_TrnId);
+        //            }
+        //        }
+        //        return null;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
+        //    }
+        //}
+        private void writelog(string log)
+        {
+            try
+            {
+                string Apipath = System.Windows.Forms.Application.StartupPath;
+                string filename = "Apilog";
+                string targetFileName = @"" + Apipath.Trim() + "\\" + filename + ".txt";
+                File.AppendAllText(targetFileName, log);
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+        //
+
+        public void ApiCalling(string uri, ApiEntity data)
+        {
+            try
+            {
+                var url = Get_Parameter_Data();
+                var client = new RestClient(url.ApiUrl);
+                client.Timeout = -1;
+                var request = new RestRequest(Method.POST);
+               
+                request.AddHeader("UserId", url.ApiUser);
+                request.AddHeader("Password",url.ApiPass);
+                request.AddHeader("Content-Type", "application/json");
+                writelog(request.Parameters[0].ToString());
+                writelog(request.Parameters[1].ToString());
+                writelog(request.Parameters[2].ToString());
+                //body
+                var jsonString = JsonConvert.SerializeObject(data);
+                request.AddParameter("application/json", jsonString, ParameterType.RequestBody);
+                IRestResponse response = client.Execute(request);
+                writelog(response.StatusCode.ToString());                              
+
+                if (response.StatusDescription == "OK")
+                {
+                    var respnsData = JsonConvert.DeserializeObject(response.Content);
+
+                    ResponseData dt = JsonConvert.DeserializeObject<ResponseData>(respnsData.ToString());
+                    if (dt.Status == "Success")
+                    {
+                        UpdateTrace(dt.Bank_TrnId);
+                    }
+                    else
+                    {
+                        //write log with full json string
+                    }
+                }
+                return;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        //============================HTTPS===============================
+
+        public void ApiCallingNew(string uri, ApiEntity data)
+        {
+            try
+            {
+                var url = Get_Parameter_Data();                
+                var jsonString = JsonConvert.SerializeObject(data);
+               
+                //============================HTTPS===============================
+
+                WebRequest webrequest = WebRequest.Create(url.ApiUrl);
+
+                //=================AUTENTICATION================================
+                //var username = url.ApiUser;
+                //var password = url.ApiPass;                
+                //webrequest.Headers.Add("Authorization", "Basic " + username + ":" + password);
+                webrequest.Credentials = GetCredential(url.ApiUrl, url.ApiUser, url.ApiPass);
+                webrequest.PreAuthenticate = true;
+                //==============================================================
+
+                webrequest.Method = "POST";
+                webrequest.ContentType = "application/json";
+
+                using (var strwriter = new StreamWriter(webrequest.GetRequestStream()))
+                {
+                    strwriter.Write(jsonString);
+                    strwriter.Flush();
+                    strwriter.Close();
+                    HttpWebResponse webResponse = (HttpWebResponse)webrequest.GetResponse();
+
+                    if (webResponse.StatusDescription == "OK")
+                    {
+                        using (System.IO.Stream s = webrequest.GetResponse().GetResponseStream())
+                        {
+                            using (System.IO.StreamReader sr = new System.IO.StreamReader(s))
+                            {
+                                var jsonResponse = sr.ReadToEnd();
+                                Console.WriteLine(String.Format("Response: {0}", jsonResponse));
+                            }
+                        }
+                    }
+                }
+                //============================HTTPS===============================
+                                
+                return;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        private CredentialCache GetCredential(string url,string username,string password)
+        {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3;
+            CredentialCache credentialCache = new CredentialCache();
+            credentialCache.Add(new System.Uri(url), "Basic", new NetworkCredential(username, password));
+            return credentialCache;
+        }
+        //============================HTTPS===============================
+        public void SendDatatoApi()
+        {
+            var conn = ConnectionString.GetCBSConnectionString();
+
+            using (var connection = new SqlConnection(conn))
+            {
+                connection.Open();
+                string query = "select * from cus_depositor_trn_traceno where conformYN='N'";
+                SqlCommand cmd = new SqlCommand(query, connection);
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    var result = (dr["traceno"].ToString());
+                    //GetEntityData(result.ToString());
+                    ApiEntity newobj = new ApiEntity();
+                    newobj = GetEntityData(result.ToString());
+                    if (newobj != null)
+                    {
+                        var url = Get_Parameter_Data();
+                        newobj.WebApiUrl = Settings.WebApiUrl;
+                        newobj.UserId = Settings.Apiusername;
+                        newobj.Password = Settings.Apiuserpass;
+                        if (Settings.WebApiUrl.Trim() != "")
+                            ApiCalling(url.ApiUrl, newobj);
+                    }
+                }
+                dr.Close();
+                connection.Close();
+
+            }
+        }
+        public ApiEntity GetEntityData(string trace)
+        {
+            try
+            {
+
+                var ad = new ApiEntity();
+                Service cs = new Service();
+                DbCommand command = _dbContext.ExecuteStoredProcesure("wsp_parameter_select_api");
+                string message = "";
+                try
+                {
+
+                    command.Connection.Open();
+                    command.Parameters.Add(_dbContext.CreateParameter("VtraceNo", trace));
+                    DbDataReader reader = command.ExecuteReader();
+
+                    try
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (reader != null && reader.Read())
+                            {
+
+                                ad.RefCode = reader["RefCode"].ToString();
+                                //ad.BankCode = System.Configuration.ConfigurationSettings.AppSettings["BankCode"];
+                                ad.BankCode = reader["BankCode"].ToString();
+                                ad.BranchCode = reader["BranchCode"].ToString();
+                                ad.AccountNo = reader["AccountNo"].ToString();
+                                ad.TrnNo = reader["TrnNo"].ToString();
+                                ad.DistributorCode = reader["DistributorCode"].ToString();
+                                ad.CrAmount = reader["Credit"].ToString();
+                                ad.DrAmount = reader["Debit"].ToString();
+                                ad.DepositSlip = reader["DepositSlip"].ToString();
+                                ad.TrnDate = Convert.ToDateTime(reader["TrnDate"].ToString()).ToString("dd-MMM-yyyy");
+                                ad.Remarks = reader["Remarks"].ToString();
+                                ad.Currency = reader["curr_code"].ToString();
+                                
+                            }
+                            
+                            //ad.UserId = System.Configuration.ConfigurationSettings.AppSettings["UserId"];
+                            //ad.UserId = cs.User().ToString();
+                            //ad.Password = cs.Password();
+                            //ad.Password = System.Configuration.ConfigurationSettings.AppSettings["Password"];
+                        }
+                        else
+                        {
+                            ad = null;
+                        }
+
+
+                    }
+                    finally
+                    {
+
+                        reader.Close();
+
+                    }
+
+
+                    return ad;
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    command.Connection.Close();
+                    command.Dispose();
+                    _dbContext.Dispose();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        public ApiParameter Get_Parameter_Data()
+        {
+            ApiParameter objApiParameter = new ApiParameter();
+            try
+            {
+
+                
+                var conn = ConnectionString.GetCBSConnectionString();
+
+                using (var connection = new SqlConnection(conn))
+                {
+                    connection.Open();
+                    string query = "SELECT TOP 1 * FROM ApiParam";
+                    SqlCommand cmd = new SqlCommand(query, connection);
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        objApiParameter.SendAft = (reader["SendAft"].ToString());
+                        objApiParameter.ReloadAft = (reader["ReloadAft"].ToString());
+                        objApiParameter.ApiUrl = (reader["ApiUrl"].ToString());
+                        objApiParameter.ApiUser = (reader["ApiUser"].ToString());
+                        objApiParameter.ApiPass = (reader["ApiPass"].ToString());
+                        objApiParameter.autoYN = (reader["autoyn"].ToString());
+                        Settings.Apiusername= (reader["ApiUser"].ToString());
+                        Settings.Apiuserpass = (reader["ApiPass"].ToString());
+                        Settings.WebApiUrl= (reader["ApiUrl"].ToString());
+                    }
+                    reader.Close();
+                    connection.Close();
+
+                }
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+            return objApiParameter;
+        }
+        public void UpdateTrace(string trace)
+        {
+
+            DbCommand command = _dbContext.LiveExecuteStoredProcesure("wsp_parameter_update_trace_api");
+            string message = "";
+            try
+            {
+
+                command.Connection.Open();
+                command.Parameters.Add(_dbContext.CreateParameter("VtraceNo", trace));
+                DbDataReader reader = command.ExecuteReader();
+                command.Connection.Close();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return;
+        }
+
+        public int TimeParameter()
+        {
+
+            var conn = ConnectionString.GetCBSConnectionString();
+
+            using (var connection = new SqlConnection(conn))
+            {
+                connection.Open();
+                string query = "select ReloadAft from ApiParam";
+                SqlCommand cmd = new SqlCommand(query, connection);
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    result = Convert.ToInt32((dr["ReloadAft"]));
+                }
+                dr.Close();
+                connection.Close();
+
+            }
+            return result;
+
+        }
+
+        //UserAndPass
+        /*public int User()
+        {
+
+            var conn = ConnectionString.GetCBSConnectionString();
+
+            using (var connection = new SqlConnection(conn))
+            {
+                connection.Open();
+                string query = "select ApiUser from ApiParam";
+                SqlCommand cmd = new SqlCommand(query, connection);
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    result = Convert.ToInt32((dr["ApiUser"]));
+                }
+                dr.Close();
+                connection.Close();
+
+            }
+            return result;
+
+        }*/
+
+        //Pass
+        /*public string Password()
+        {
+
+            var conn = ConnectionString.GetCBSConnectionString();
+
+            using (var connection = new SqlConnection(conn))
+            {
+                connection.Open();
+                string query = "select ApiPass from ApiParam";
+                SqlCommand cmd = new SqlCommand(query, connection);
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    pass = (dr["ApiPass"]).ToString();
+                }
+                dr.Close();
+                connection.Close();
+
+            }
+            return pass;
+
+        }*/
+    }
+}
+
+
